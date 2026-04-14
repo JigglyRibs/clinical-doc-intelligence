@@ -10,18 +10,30 @@ This project is the first step toward that goal.
 
 ## Current Features
 
-- Extracts text from multi-page PDFs using PyMuPDF  
-- Stores results in structured JSON format  
-- Includes page-level details (page number, character count)  
-- Combines all extracted text into a single document field  
-
+- Extracts text from multi-page PDFs
+- Uses native PDF text when available
+- Falls back to OCR for image-based pages
+- Applies image preprocessing to improve OCR accuracy
+- Outputs structured JSON with page-level metadata
+  
 ## How It Works
 
-- A PDF is loaded using PyMuPDF  
-- Each page is processed individually  
-- Text is extracted directly from the PDF  
-- Metadata is collected for each page  
-- Everything is saved into a structured JSON file  
+  - A PDF is loaded using PyMuPDF  
+  - Each page is processed individually  
+  - Text is extracted directly from the PDF
+  - If extracted text is too weak, OCR is used as a fallback
+  - Metadata is collected for each page  
+  - Everything is saved into a structured JSON file
+
+## OCR Fallback
+
+For pages with weak or missing text, the system uses Tesseract OCR.
+
+Basic preprocessing is applied before OCR:
+  - grayscale conversion
+  - adaptive thresholding
+
+This helps improve text extraction from scanned or low-quality documents.
 
 ## Example Output
 
@@ -43,30 +55,33 @@ This project is the first step toward that goal.
 
 ## Tech Stack
 
-  -Python
-  -PyMuPDF
-  -JSON
+  - Python
+  - PyMuPDF
+  - Tesseract OCR
+  - OpenCV
+  - JSON
 
 ## How to Run
 
-  1. Install Dependencies
-    pip install -r requirements.txt
-  2. Add a PDF to
-    data/raw/
-  3. Run
-    python -m src.ingestion.text_extractor
+1. Install dependencies  
+   `pip install -r requirements.txt`
+
+2. Add a PDF to  
+   `data/raw/`
+
+3. Run  
+   `python -m src.ingestion.text_extractor`
 
 ## Next steps
 
-  -Add OCR for scanned PDFs
-  -Classify document types
-  -Extract key fields (e.g, invoice number, destination)
-  -Build a search and question-answering system
+- Improve OCR accuracy and preprocessing
+- Extract structured fields (e.g., invoice number, destination)
+- Add document classification
+- Build a search and question-answering system
 
 ## Why I built this
 
-I wanted to build something with an easy-to-see real-world application, since most systems rely on documents, and not everyone has the luxury to take the time for meticulous examination. The project is very general right
-now, but has the potential to be useful in hospitals where quickly processing patients is key, or real estate, where the paperwork can often be heavy.
+This project focuses on turning unstructured documents into clear, machine readable data. As it continues to develop, it will tackle a universal problem across all industries; gathering necessary data from wildly unstructured or convoluted documents. Systems like this can allow for a faster access to patient information in healthcare, or reduce paperwork load in real estate spaces where large volumes of documents go into every transaction. 
 
 
 
