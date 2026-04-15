@@ -10,43 +10,59 @@ This project is the first step toward that goal.
 
 ## Current Features
 
-- Extracts text from multi-page PDFs
-- Uses native PDF text when available
-- Falls back to OCR for image-based pages
-- Applies image preprocessing to improve OCR accuracy
-- Outputs structured JSON with page-level metadata
-  
+- Native PDF text extraction using PyMuPDF  
+- OCR support for scanned/image-based PDFs (Tesseract + OpenCV)  
+- Image preprocessing (grayscale + adaptive thresholding)  
+- Word-level OCR output with bounding boxes  
+- Line reconstruction using spatial grouping  
+- Structured JSON output (page + document level)  
+
 ## How It Works
 
-  - A PDF is loaded using PyMuPDF  
-  - Each page is processed individually  
-  - Text is extracted directly from the PDF
-  - If extracted text is too weak, OCR is used as a fallback
-  - Metadata is collected for each page  
-  - Everything is saved into a structured JSON file
+### Native PDFs
+- Load PDF using PyMuPDF  
+- Extract text per page  
+- Track metadata (page number, character count)  
 
-## OCR Fallback
+### Scanned PDFs
+- Convert page to image  
+- Apply preprocessing (contrast + noise reduction)  
+- Run Tesseract OCR  
+- Extract word-level data (text + position)  
 
-For pages with weak or missing text, the system uses Tesseract OCR.
-
-Basic preprocessing is applied before OCR:
-  - grayscale conversion
-  - adaptive thresholding
-
-This helps improve text extraction from scanned or low-quality documents.
+### Line Reconstruction
+- Sort words by position (`y`, then `x`)  
+- Group words into lines using vertical proximity  
+- Sort each line left-to-right  
+- Rebuild readable text  
 
 ## Example Output
 
 ```json
 {
   "file_name": "invoice_001.pdf",
-  "page_count": 2,
+  "page_count": 1,
   "pages": [
     {
       "page_number": 1,
-      "method": "native_text",
+      "method": "ocr",
       "char_count": 523,
-      "text": "..."
+      "text": "...",
+      "lines": [
+        {
+          "text": "Bachelor of Science",
+          "words": [
+            {
+              "text": "Bachelor",
+              "x": 10,
+              "y": 100,
+              "width": 70,
+              "height": 15,
+              "conf": 96
+            }
+          ]
+        }
+      ]
     }
   ],
   "full_text": "..."
@@ -57,8 +73,9 @@ This helps improve text extraction from scanned or low-quality documents.
 
   - Python
   - PyMuPDF
-  - Tesseract OCR
+  - Tesseract (pytesseract)
   - OpenCV
+  - NumPy
   - JSON
 
 ## How to Run
@@ -74,10 +91,9 @@ This helps improve text extraction from scanned or low-quality documents.
 
 ## Next steps
 
-- Improve OCR accuracy and preprocessing
-- Extract structured fields (e.g., invoice number, destination)
-- Add document classification
-- Build a search and question-answering system
+  -Classify document types
+  -Extract key fields (e.g, invoice number, destination)
+  -Build a search and question-answering system
 
 ## Why I built this
 
