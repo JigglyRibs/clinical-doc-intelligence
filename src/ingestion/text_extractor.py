@@ -23,6 +23,7 @@ with pymupdf.open(pdf_path) as doc:
 
     pages = []
     full_text = ""
+    words = []
 
     # process each page in the document
     for page_num, page in enumerate(doc, start=1):
@@ -39,10 +40,11 @@ with pymupdf.open(pdf_path) as doc:
         print(f"Native char_count: {char_count}")
         print(f"Native preview: {text[:100]!r}")
 
+
         method = 'native_text'
 
         # decide whether to use OCR based on text quality
-        if len(text.strip()) < 50:
+        if len(text.strip()) > 1:
             # fallback to OCR for pages with weak native text
 
             print(f"OCR triggered on page {page_num}")
@@ -54,8 +56,10 @@ with pymupdf.open(pdf_path) as doc:
             # extract text using OCR
             text = ocrmethod.get_text(image)
             char_count = len(text)
+            words = ocrmethod.get_data(image)
             print(f"OCR char_count: {len(text)}")
             print(f"OCR preview: {text[:100]!r}")
+            print(words)
 
             # update metadata after OCR
             method = 'ocr'
