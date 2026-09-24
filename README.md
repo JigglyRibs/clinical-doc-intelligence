@@ -73,8 +73,7 @@ This project is the first step toward that goal.
 1. Install dependencies  
    `pip install -r requirements.txt`
 
-2. Add a PDF to  
-   `data/raw/`
+2. Create a data/raw/ folder and place a PDF inside it.
 
 3. Run  
    `python -m src.ingestion.text_extractor`

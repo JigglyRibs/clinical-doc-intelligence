@@ -13,6 +13,7 @@ import numpy as np
 pdf_path = r"data\raw\sample-scanned.pdf"
 output_path = r"data\processed\output.json"
 
+Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
 with pymupdf.open(pdf_path) as doc:
     info = {
