@@ -12,7 +12,7 @@ This project is the first step toward that goal.
 
 - Native PDF text extraction using PyMuPDF  
 - OCR support for scanned/image-based PDFs (Tesseract + OpenCV)  
-- Image preprocessing (grayscale + adaptive thresholding)  
+- Image preprocessing (detail enhancement, resizing, and grayscale conversion)
 - Word-level OCR output with bounding boxes  
 - Line reconstruction using spatial grouping  
 - Structured JSON output (page + document level)  
@@ -26,7 +26,7 @@ This project is the first step toward that goal.
 
 ### Scanned PDFs
 - Convert page to image  
-- Apply preprocessing (contrast + noise reduction)  
+- Apply detail enhancement, resizing, and grayscale conversion
 - Run Tesseract OCR  
 - Extract word-level data (text + position)  
 
@@ -40,32 +40,22 @@ This project is the first step toward that goal.
 
 ```json
 {
-  "file_name": "invoice_001.pdf",
-  "page_count": 1,
-  "pages": [
+  "page_num": 1,
+  "method": "ocr",
+  "char_count": 523,
+  "text": "EDUCATION\nBachelor of Science...",
+  "sections": [
     {
-      "page_number": 1,
-      "method": "ocr",
-      "char_count": 523,
-      "text": "...",
-      "lines": [
+      "header": "EDUCATION",
+      "blocks": [
         {
-          "text": "Bachelor of Science",
-          "words": [
-            {
-              "text": "Bachelor",
-              "x": 10,
-              "y": 100,
-              "width": 70,
-              "height": 15,
-              "conf": 96
-            }
-          ]
+          "text": "EDUCATION\nBachelor of Science",
+          "lines": []
         }
-      ]
+      ],
+      "text": "EDUCATION\nBachelor of Science"
     }
-  ],
-  "full_text": "..."
+  ]
 }
 ```
 

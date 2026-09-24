@@ -2,34 +2,39 @@
 # Handles preprocessing, OCR extraction, line grouping, block grouping,
 # header detection, and section grouping.
 
-import cv2 as cv
+import cv2
 import numpy as np
 import pytesseract
 
 
 def preprocessing(image):
-    """Apply basic preprocessing to improve OCR accuracy."""
-    # Convert PIL image to NumPy array
-    image_array = np.array(image)
+    """Apply basic preprocessing before OCR."""
+    image_array = image.copy()
 
-    # Convert to grayscale
-    image_array = cv.cvtColor(image_array, cv.COLOR_RGB2GRAY)
-
-    # Apply adaptive thresholding to improve contrast for OCR
-    processed_image = cv.adaptiveThreshold(
+    image_array = cv2.detailEnhance(
         image_array,
-        255,
-        cv.ADAPTIVE_THRESH_GAUSSIAN_C,
-        cv.THRESH_BINARY,
-        11,
-        2,
+        sigma_s=10,
+        sigma_r=0.10
     )
 
-    return processed_image
+    image_array = cv2.resize(
+        image_array,
+        None,
+        fx=1.5,
+        fy=1.5,
+        interpolation=cv2.INTER_LANCZOS4
+    )
+
+    gray_image = cv2.cvtColor(
+        image_array,
+        cv2.COLOR_RGB2GRAY
+    )
+
+    return gray_image
 
 
 def get_text(image) -> str:
-    """Extract full OCR text from an image."""
+    """Extract OCR text from a preprocessed image."""
     processed_image = preprocessing(image)
     return pytesseract.image_to_string(processed_image)
 
@@ -112,7 +117,6 @@ def group_words_into_lines(words: list, threshold: int = 12) -> list:
             current_line = [word]
             current_y = word["y"]
 
-    # Final line
     lines.append(build_line(current_line))
     return lines
 
@@ -170,7 +174,6 @@ def group_lines_into_blocks(lines: list, gap_multiplier: float = 0.3) -> list:
             blocks.append(build_block(current_block))
             current_block = [line]
 
-    # Final block
     blocks.append(build_block(current_block))
     return blocks
 
@@ -266,7 +269,6 @@ def group_blocks_into_sections(blocks: list) -> list:
 
     for block in blocks:
         if block["is_header"]:
-            # Finalize the previous section before starting a new one
             if current_section is not None:
                 section_text = "\n".join(
                     block["text"] for block in current_section["blocks"]
@@ -280,7 +282,6 @@ def group_blocks_into_sections(blocks: list) -> list:
             }
 
         else:
-            # If content appears before any header, keep it as UNLABELED
             if current_section is None:
                 current_section = {
                     "header": "UNLABELED",
@@ -289,7 +290,6 @@ def group_blocks_into_sections(blocks: list) -> list:
             else:
                 current_section["blocks"].append(block)
 
-    # Final section
     if current_section is not None:
         section_text = "\n".join(
             block["text"] for block in current_section["blocks"]

@@ -7,12 +7,13 @@ import pymupdf
 import json
 from pathlib import Path
 from src.ingestion import ocrmethod
+import numpy as np
 
 
-pdf_path = r"data\raw\Resume Version 5 - Retail - IP.pdf"
+pdf_path = r"data\raw\sample-scanned.pdf"
 output_path = r"data\processed\output.json"
 
-# open PDF document
+
 with pymupdf.open(pdf_path) as doc:
     info = {
         'file_name': Path(pdf_path).name,
@@ -23,44 +24,51 @@ with pymupdf.open(pdf_path) as doc:
 
     pages = []
     full_text = ""
-    words = []
 
-    # process each page in the document
+    
     for page_num, page in enumerate(doc, start=1):
 
-        # debug: show page number
+        
         print(f"\n--- Page {page_num} ---")
 
         # extract native text from PDF
         # measure text length to determine quality
         text = page.get_text()
+        text = text.replace("\u200b", "").replace("–","-").replace("’","'")
 
         # Count characters to assess extraction quality
         char_count = len(text)
         print(f"Native char_count: {char_count}")
         print(f"Native preview: {text[:100]!r}")
 
-
+        sections = []
         method = 'native_text'
 
         # decide whether to use OCR based on text quality
-        if len(text.strip()) > 1:
-            # fallback to OCR for pages with weak native text
-
+        if len(text.strip()) < 50:
             print(f"OCR triggered on page {page_num}")
 
             # render page as image for OCR
-            pix = page.get_pixmap()
-            image = pix.pil_image()
+            matrix = pymupdf.Matrix(300 / 72, 300 / 72)
 
-            # extract text using OCR
-            text = ocrmethod.get_text(image)
+            pix = page.get_pixmap(
+                matrix=matrix,
+                colorspace=pymupdf.csRGB,
+                alpha=False
+            )
+
+            img_array = np.frombuffer(
+                pix.samples,
+                dtype=np.uint8
+            ).reshape(pix.height, pix.width, 3)
+
+            
+            text = ocrmethod.get_text(img_array)
             char_count = len(text)
-            words = ocrmethod.get_data(image)
+            sections = ocrmethod.get_data(img_array)
             print(f"OCR char_count: {len(text)}")
             print(f"OCR preview: {text[:100]!r}")
-            print(words)
-
+            
             # update metadata after OCR
             method = 'ocr'
             info['extraction_method'] = 'mixed'
@@ -70,7 +78,8 @@ with pymupdf.open(pdf_path) as doc:
             'page_num': page_num,
             'method': method,
             'char_count': char_count, 
-            'text': text
+            'text': text,
+            'sections': sections
         }
 
         pages.append(page_dict)
@@ -88,10 +97,11 @@ with pymupdf.open(pdf_path) as doc:
 with open(output_path, "w", encoding="utf-8") as out:
     json.dump(info, out, indent=4, ensure_ascii=False)
 
-# print summary of extraction results
+
 print("\n--- Document Summary ---")
 print(f"Total pages: {info['page_count']}")
 print(f"Extraction method: {info['extraction_method']}")
+
 
 print("Done")
         
